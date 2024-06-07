@@ -5,6 +5,8 @@ from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
 import telegram
 import time
+import random
+
 
 url = "https://www.klasgame.com/mmorpg-oyunlar/knight-unity/knight-unity-goldbar"
 my_token = '6463031187:AAGAVe5K6yWqH9vTSz5sGLGL2LKWmEodzjw'
@@ -16,9 +18,17 @@ def send(msg, chat_id, token=my_token):
 
 a = 1
 
+
+
 while a > 0:
+    
     driver = webdriver.Chrome()
-    driver.get(url)
+    driver2 = webdriver.Firefox()
+    driver3 = webdriver.Edge()
+
+    list = [driver, driver2, driver3]
+    b = random.choice(list)
+    b.get(url)
     
     soup = BeautifulSoup(driver.page_source, 'html.parser')
 
