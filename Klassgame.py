@@ -21,10 +21,13 @@ while True:
     soup = BeautifulSoup(driver.page_source, 'html.parser')
     xpath = driver.find_element(By.XPATH, "//*[@id='urunler']/div[4]/div[1]/div[3]/div[2]/div[2]/div/div[1]/div[5]/a")
     data = xpath.get_attribute('href')
-    
-    print(data)
-    # 'a' etiketinin href özelliğini alarak kontrol etme
+    onclick = xpath.get_attribute('onclick')
 
+    # 'a' etiketinin href özelliğini alarak kontrol etme
+    if onclick == None:
+        send(msg=data, chat_id=my_chat_id, token=my_token)
+    else:
+        print("Href değeri 'false' veya 'a' etiketi bulunamadı.")
 
     driver.quit()
     time.sleep(5)
