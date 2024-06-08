@@ -11,9 +11,9 @@ url = "https://www.klasgame.com/mmorpg-oyunlar/knight-unity/knight-unity-goldbar
 my_token = '6463031187:AAGAVe5K6yWqH9vTSz5sGLGL2LKWmEodzjw'
 my_chat_id = -1002209424495
 
-def send(msg, chat_id, token=my_token):
+async def send(msg, chat_id, token=my_token):
     bot = telegram.Bot(token=token)
-    bot.sendMessage(chat_id=chat_id, text=msg)
+    await bot.sendMessage(chat_id=chat_id, text=msg)
 
 while True:
     driver = webdriver.Chrome()
