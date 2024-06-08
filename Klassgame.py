@@ -11,9 +11,9 @@ url = "https://www.klasgame.com/mmorpg-oyunlar/knight-unity/knight-unity-goldbar
 my_token = '6463031187:AAGAVe5K6yWqH9vTSz5sGLGL2LKWmEodzjw'
 my_chat_id = -1002209424495
 
-async def send(msg, chat_id, token=my_token):
+def send(msg, chat_id, token=my_token):
     bot = telegram.Bot(token=token)
-    await bot.sendMessage(chat_id=chat_id, text=msg)
+    bot.sendMessage(chat_id=chat_id, text=msg)
 
 while True:
     driver = webdriver.Chrome()
@@ -23,12 +23,7 @@ while True:
     xpath = driver.find_element(By.XPATH, "//*[@id='urunler']/div[4]/div[1]/div[3]/div[2]/div[2]/div/div[1]/div[5]/a")
     data = xpath.get_attribute('href')
     onclick = xpath.get_attribute('onclick')
-
-    # 'a' etiketinin href özelliğini alarak kontrol etme
-    if onclick == None:
-       asyncio.run(send(msg=data, chat_id=my_chat_id, token=my_token))
-    else:
-        print("Href değeri 'false' veya 'a' etiketi bulunamadı.")
+    print(onclick)
 
     driver.quit()
     time.sleep(5)
