@@ -23,7 +23,9 @@ while True:
     xpath = driver.find_element(By.XPATH, "//*[@id='urunler']/div[4]/div[1]/div[3]/div[2]/div[2]/div/div[1]/div[5]/a")
     data = xpath.get_attribute('href')
     onclick = xpath.get_attribute('onclick')
-    if onclick == None:
+    if onclick == "message('Şu an için alış aktif görünmüyor, lütfen daha sonra tekrar deneyiniz.', 'danger'); return false;":
+        print('devam etmeli')
+    else:
         asyncio.run(send(msg='data', chat_id=my_chat_id, token=my_token))
 
     driver.quit()
