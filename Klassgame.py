@@ -5,6 +5,7 @@ from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
 import telegram
 import time
+import asyncio
 
 url = "https://www.klasgame.com/mmorpg-oyunlar/knight-unity/knight-unity-goldbar"
 my_token = '6463031187:AAGAVe5K6yWqH9vTSz5sGLGL2LKWmEodzjw'
@@ -25,7 +26,7 @@ while True:
 
     # 'a' etiketinin href özelliğini alarak kontrol etme
     if onclick == None:
-        send(msg=data, chat_id=my_chat_id, token=my_token)
+       asyncio.run(send(msg=data, chat_id=my_chat_id, token=my_token))
     else:
         print("Href değeri 'false' veya 'a' etiketi bulunamadı.")
 
