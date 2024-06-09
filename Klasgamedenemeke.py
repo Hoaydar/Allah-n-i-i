@@ -21,7 +21,7 @@ async def main():
         driver.get(url)
 
         soup = BeautifulSoup(driver.page_source, 'html.parser')
-        xpath = driver.find_element(By.CLASS_NAME, " product-sell button-top-animation")
+        xpath = driver.find_element(By.CLASS_NAME,"product-sell.button-top-animation")
         data = xpath.get_attribute('href')
         onclick = xpath.get_attribute('onclick')
         if onclick == "message('Şu an için alış aktif görünmüyor, lütfen daha sonra tekrar deneyiniz.', 'danger'); return false;":
