@@ -9,11 +9,10 @@ import traceback
 
 # İlk site bilgileri
 url1 = "https://oyuneks.com/nowa-online-world/nowa-online-world-gold"
-chat_id1 = -1002254160124_2
-
+chat_id1 = -1002254160124
 # İkinci site bilgileri
 url2 = "https://www.klasgame.com/mmorpg-oyunlar/nowa-online-world/nowa-online-world-gold"
-chat_id2 = -1002254160124_3
+chat_id2 = -1002209424495
 
 # Telegram bot token
 token = '6463031187:AAGAVe5K6yWqH9vTSz5sGLGL2LKWmEodzjw'
@@ -49,7 +48,7 @@ async def check_oyuneks():
         print(f"Oyuneks için bir hata oluştu: {traceback.format_exc()}")
     finally:
         driver.quit()
-
+'''
 async def check_klasgame():
     driver = webdriver.Chrome()
     try:
@@ -71,6 +70,32 @@ async def check_klasgame():
                 await send_message(msg='Klasgame\n\nhttps://www.klasgame.com/mmorpg-oyunlar/nowa-online-world/nowa-online-world-gold', chat_id=chat_id2, token=token)
         else:
             print("Klasgame: 10-gb buton bulunamadı")
+    except Exception as e:
+        print(f"Klasgame için bir hata oluştu: {traceback.format_exc()}")
+    finally:
+        driver.quit()
+'''
+async def check_klasgame():
+    driver = webdriver.Chrome()
+    try:
+        driver.get(url2)
+        buttons = driver.find_elements(By.CLASS_NAME, "product-sell.button-top-animation")
+
+        if len(buttons) < 5:
+            print("Klasgame: Beklenen 5 buton bulunamadı")
+            return
+
+        button_names = ["AURA", "FENIX", "TERA", "ARES", "ARES"]
+        for index, button in enumerate(buttons[:5]):
+            onclick = button.get_attribute('onclick')
+
+            if onclick != "message('Şu an için alış aktif görünmüyor, lütfen daha sonra tekrar deneyiniz.', 'danger'); return false;":
+                msg = f"Klasgame - {button_names[index]}\n\nhttps://www.klasgame.com/mmorpg-oyunlar/nowa-online-world/nowa-online-world-gold"
+                await send_message(msg=msg, chat_id=chat_id2, token=token)
+                break
+        else:
+            print("Klasgame: Devam etmeli...")
+
     except Exception as e:
         print(f"Klasgame için bir hata oluştu: {traceback.format_exc()}")
     finally:
