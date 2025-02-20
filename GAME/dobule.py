@@ -20,7 +20,6 @@ async def send_message(msg, chat_id, token):
     await bot.close()
 
 async def check_klasgame():
-    # Chrome ayarları
     options = Options()
     options.add_argument("--headless")
     driver = webdriver.Chrome(options=options)
@@ -28,12 +27,12 @@ async def check_klasgame():
     try:
         driver.get(url2)
 
-        # Butonların yüklenmesini bekleyin
         WebDriverWait(driver, 10).until(
-            EC.presence_of_all_elements_located((By.CLASS_NAME, "product-sell.button-top-animation"))
+            EC.presence_of_all_elements_located((By.CSS_SELECTOR, ".product-sell.button-top-animation"))
         )
 
-        buttons = driver.find_elements(By.CLASS_NAME, "product-sell.button-top-animation")
+        buttons = driver.find_elements(By.CSS_SELECTOR, ".product-sell.button-top-animation")
+        print(f"Bulunan buton sayısı: {len(buttons)}")
 
         if len(buttons) < 5:
             print("Klasgame: Beklenen 5 buton bulunamadı")
@@ -42,15 +41,14 @@ async def check_klasgame():
         button_names = ["AURA", "FENIX", "TERA", "ARES", "ARES"]
         for index, button in enumerate(buttons[:5]):
             onclick = button.get_attribute('onclick')
-            print(f"onclick: {onclick}")
+            print(f"Button {button_names[index]} onclick değeri: {onclick}")
 
-            # Buton aktifse, mesaj gönder
-            if onclick != "message('Şu an için alış aktif görünmüyor, lütfen daha sonra tekrar deneyiniz.', 'danger'); return false;":
+            if onclick and "Şu an için alış aktif görünmüyor" not in onclick:
                 msg = f"Klasgame - {button_names[index]}\n\nhttps://www.klasgame.com/mmorpg-oyunlar/nowa-online-world/nowa-online-world-gold"
                 await send_message(msg=msg, chat_id=chat_id2, token=token)
                 break
         else:
-            print("Klasgame: Devam etmeli...")
+            print("Klasgame: Tüm butonlar pasif durumda.")
 
     except Exception as e:
         print(f"Klasgame için bir hata oluştu: {traceback.format_exc()}")
