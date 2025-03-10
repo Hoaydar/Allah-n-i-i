@@ -2,51 +2,53 @@ import re
 from telethon import TelegramClient
 import asyncio
 
-# API bilgileri
+# API Bilgileri
 api_id = '25380560'
 api_hash = '6e554fabcb17b2072f2b1242dfb7bdc6'
 phone_number = '+905432240619'
+
 client = TelegramClient('session_name', api_id, api_hash)
 
-target_groups = [
-    "NowaOnlineBOT",
-   #"knight_mobile"
-]
+# Kaynak gruplar (Takip edilecek gruplar)
+target_groups = ["NowaOnlineBOT"]
 
-destination_group = 'denemeliksahmara'
+# Mesajların gönderileceği özel grup (ID formatında)
+destination_group = -1002209424495
 
+# Son mesaj ID'lerini takip etmek için
 last_message_ids = {group_id: 0 for group_id in target_groups}
 
 async def main():
     await client.start(phone=phone_number)
 
     for target_group in target_groups:
-        async for message in client.iter_messages(target_group, min_id=last_message_ids[target_group]):
+        # **Son 10 mesajı getir**
+        messages = []
+        async for message in client.iter_messages(target_group, limit=10):
+            messages.append(message)
+
+        # **Eski mesajları atlayıp, yalnızca yeni olanları işle**
+        for message in reversed(messages):  # Eski mesajlardan yeniye doğru sırala
+            if message.id <= last_message_ids[target_group]:
+                continue  # Eğer mesaj zaten işlendi ise atla
+
             if message.text:
-                # Amazon linklerini bul ve ?tag= kısmını güncelle
-                modified_text = re.sub(
-                    r'(https?://(www\.)?amazon\.\w{2,3}/[^\s]+?)\?tag=[^&]+',
-                    r'\1?tag=indirimalarmitr_4895-21',
-                    message.text
-                )
-                
-                # Güncellenmiş bağlantıyı mesajın sonunda yeniden ekle
-                modified_message = re.sub(
-                    r'(https?://(www\.)?amazon\.\w{2,3}/[^\s]+)',
-                    modified_text,
-                    message.text
-                )
-                
-                # Güncellenmiş metni hedef gruba gönder
-                await client.send_message(destination_group, modified_message)
-                
-                # Son mesaj kimliğini güncelle
-                last_message_ids[target_group] = max(last_message_ids[target_group], message.id)
+                # **"DUYURU" kelimesi içeren mesajları atla**
+                if "DUYURU" in message.text.upper():
+                    print(f'Atlandı (DUYURU içeriyor): {message.text[:30]}...')
+                    continue
+            
+                # **Mesajı hedef gruba gönder**
+                await client.send_message(destination_group, message.text)
+                print(f'Gönderildi: {message.text[:30]}...')
+
+            # **Son mesaj ID’sini güncelle**
+            last_message_ids[target_group] = message.id
 
 async def run_bot():
     while True:
         await main()
-        await asyncio.sleep(60)
+        await asyncio.sleep(20)  # **Her 20 saniyede bir yeni mesajları kontrol et**
 
 with client:
     client.loop.run_until_complete(run_bot())
