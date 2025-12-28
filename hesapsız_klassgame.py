@@ -23,11 +23,16 @@ async def send_to_all(text):
 
 async def main():
     options = Options()
-    # Bot korumasını aşmak için gerekli bazı ayarlar
+    # Bot korumasını aşmak ve VDS kararlılığı için ayarlar
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    options.add_use_experimental_option("useAutomationExtension", False)
+    options.add_experimental_option("useAutomationExtension", False) # "add_use_" değil, "add_" olmalı
     
+    # VDS ortamında hata almamak için bu 3 satır kritiktir:
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    # options.add_argument("--headless") # Eğer VDS'de ekran yoksa burayı aktif et
+
     driver = webdriver.Chrome(options=options)
     last_status = None 
 
@@ -36,9 +41,10 @@ async def main():
     try:
         while True:
             try:
+                # Siteye gitmeyi dene
                 driver.get(url)
                 
-                # Butonun yüklenmesi için max 15 saniye bekle (Açık Bekleme)
+                # Butonun yüklenmesi için bekle
                 wait = WebDriverWait(driver, 15)
                 button_element = wait.until(EC.presence_of_element_located((By.CLASS_NAME, "product-sell.button-top-animation")))
                 
@@ -64,10 +70,13 @@ async def main():
                     last_status = current_status
 
             except Exception as e:
-                # Sayfa yüklenemezse veya buton o an yoksa buraya düşer, program çökmez
-                print(f"[{datetime.now().strftime('%H:%M:%S')}] Sayfa hatası veya buton yok, tekrar deneniyor...")
+                # DNS (ERR_NAME_NOT_RESOLVED) veya sayfa hatalarında buraya düşer
+                print(f"[{datetime.now().strftime('%H:%M:%S')}] Bağlantı/Buton hatası: {e}")
+                # Hata durumunda 10 saniye bekle ve döngünün başına dön
+                await asyncio.sleep(10)
+                continue 
             
-            # Siteyi çok sık yormamak ve banlanmamak için 15-20 saniye idealdir
+            # Normal döngü beklemesi (Banlanmamak için 20 sn)
             await asyncio.sleep(20) 
             
     except KeyboardInterrupt:
