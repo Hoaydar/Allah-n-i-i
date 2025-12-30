@@ -8,76 +8,71 @@ import asyncio
 from datetime import datetime
 
 # --- AYARLAR ---
-url = "https://www.klasgame.com/revenger-online/revenger-online-gold"
-my_token = '7453834823:AAHUQNj727_TzXRG4o-ZYCuMM5TmdLTtK5c'
-my_chat_ids = [5695472914, 6291821880]
+CHECK_URL = "https://www.klasgame.com/revenger-online/revenger-online-gold"
+MY_TOKEN = '7453834823:AAHUQNj727_TzXRG4o-ZYCuMM5TmdLTtK5c'
+USER_IDS = [5695472914, 6291821880]
 
-bot = Bot(token=my_token)
+bot = Bot(token=MY_TOKEN)
 
-async def send_to_all(text):
-    for chat_id in my_chat_ids:
-        try:
-            await bot.send_message(chat_id=chat_id, text=text)
-        except Exception as e:
-            print(f"[{datetime.now().strftime('%H:%M:%S')}] Mesaj hatası: {e}")
+# İlk koddaki send_telegram_message fonksiyon yapısı
+async def send_telegram_message(uid, text):
+    try:
+        await bot.send_message(chat_id=uid, text=text)
+    except Exception as e:
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] Mesaj hatası ({uid}): {e}")
+
+def log(message):
+    print(f"[{datetime.now().strftime('%H:%M:%S')}] {message}")
 
 async def main():
     options = Options()
-    # Bot korumasını aşmak ve VDS kararlılığı için ayarlar
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    options.add_experimental_option("useAutomationExtension", False) # "add_use_" değil, "add_" olmalı
+    options.add_experimental_option("useAutomationExtension", False)
     
-    # VDS ortamında hata almamak için bu 3 satır kritiktir:
+    # VDS Ayarları
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
-    # options.add_argument("--headless") # Eğer VDS'de ekran yoksa burayı aktif et
+    # options.add_argument("--headless") # Ekran yoksa aktif et
 
     driver = webdriver.Chrome(options=options)
     last_status = None 
 
-    print(f"[{datetime.now().strftime('%H:%M:%S')}] Takip başlatıldı...")
+    log("Takip başlatıldı...")
 
     try:
         while True:
             try:
-                # Siteye gitmeyi dene
-                driver.get(url)
+                driver.get(CHECK_URL)
                 
-                # Butonun yüklenmesi için bekle
+                # Butonun yüklenmesini bekle
                 wait = WebDriverWait(driver, 15)
-                button_element = wait.until(EC.presence_of_element_located((By.CLASS_NAME, "product-sell.button-top-animation")))
+                correct_button = wait.until(EC.presence_of_element_located((By.CLASS_NAME, "product-sell.button-top-animation")))
                 
-                onclick = button_element.get_attribute("onclick")
-                now = datetime.now().strftime('%H:%M:%S')
-                
-                # Durum tespiti
-                if "Şu an için alış aktif görünmüyor" in onclick:
-                    current_status = "kapali"
-                    status_text = "KAPALI"
-                else:
-                    current_status = "acik"
-                    status_text = "AÇIK"
-
-                print(f"[{now}] Durum: {status_text}")
-
-                # Durum değiştiyse mesaj at
-                if current_status != last_status:
-                    if current_status == "acik":
-                        await send_to_all(f"✅ Buton AÇILDI! {url}")
+                if correct_button:
+                    onclick = correct_button.get_attribute("onclick")
+                    
+                    # --- İLK BAŞTA ATTIĞIN KONTROL MANTIĞI ---
+                    if onclick == "message('Şu an için alış aktif görünmüyor, lütfen daha sonra tekrar deneyiniz.', 'danger'); return false;":
+                        current_status = "kapali"
+                        if current_status != last_status:
+                            log("❌ Satış aktif değil (buton pasif).")
+                            last_status = current_status
                     else:
-                        await send_to_all("❌ Buton KAPANDI!")
-                    last_status = current_status
+                        current_status = "acik"
+                        if current_status != last_status:
+                            log("✅ Satış aktif bulundu! Telegram mesajı gönderiliyor...")
+                            for uid in USER_IDS:
+                                await send_telegram_message(uid, f"Revenger Online satış aktif: {CHECK_URL}")
+                            last_status = current_status
+                    # ------------------------------------------
 
             except Exception as e:
-                # DNS (ERR_NAME_NOT_RESOLVED) veya sayfa hatalarında buraya düşer
-                print(f"[{datetime.now().strftime('%H:%M:%S')}] Bağlantı/Buton hatası: {e}")
-                # Hata durumunda 10 saniye bekle ve döngünün başına dön
+                log(f"Bağlantı/Buton hatası: {e}")
                 await asyncio.sleep(10)
                 continue 
             
-            # Normal döngü beklemesi (Banlanmamak için 20 sn)
-            await asyncio.sleep(20) 
+            await asyncio.sleep(20) # Döngü beklemesi
             
     except KeyboardInterrupt:
         print("Durduruldu.")
